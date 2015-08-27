@@ -4,34 +4,50 @@ using namespace std;
 
 class graph {
 private:
-    int path[4][4];
-    int directPath[4][4];
-    char *name[4];
-    char *shortName[4];
-    int n;
+    int **path;
+    int **directPath;
+    char **names;
+    char **shortNames;
+    int noOfNodes;
 public:
-    graph(int size, char *names[4][2]);
+    graph(int noOfNodes, char *names[][2]);
     ~graph();
     bool isConnected(int, int);
-    void addEdge(int, int, int, int);
+    void addEdge(int n1, int n2, int pathcost, int directPathCost);
     void listNodes();
 };
 void graph::listNodes() {
     for(int i = 0; i < 4; i++){
-        cout<<i<<"  "<<name[i]<<" - "<<shortName[i]<<endl;
+        cout<<i<<"  "<<names[i]<<" - "<<shortNames[i]<<endl;
     }
 
 }
-graph::graph(int size, char *names[4][2] ) {
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++) {
-            path[i][j] = -1;
-        }
-        name[i] = names[i][0];
-        shortName[i] = names[i][1];
+graph::graph(int no, char *namesArg[][2] ) {
+    noOfNodes = no;
+    path = new int*[no];
+    directPath = new int*[no];
+    names = new char*[no];
+    shortNames = new char*[no];
+    for(int i = 0; i < no; i++){
+        path[i] = new int[no];
+        directPath[i] = new int[no];
+        *(names+i) = namesArg[i][0];
+        *(shortNames+i) = namesArg[i][1];
+        for(int j = 0; j < no; j++)
+            path[i][j] = directPath[i][j] = -1;
     }
 }
 graph::~graph() {
+    for(int i = 0; i<noOfNodes; i++) {
+        delete[] names[i];
+        delete[] shortNames[i];
+        delete[] path[i];
+        delete[] directPath[i];
+    }
+    delete names;
+    delete shortNames;
+    delete path;
+    delete directPath;
 }
 bool graph::isConnected(int node1, int node2) {
     return (path[node1][node2] >= 0);
@@ -43,8 +59,9 @@ void graph::addEdge(int n1, int n2, int pathcost, int directPathCost) {
 
 
 int main() {
-    char *Names[4][2] = { "Oradea","Or", "Zerind", "Ze", "Arad", "Ar", "Timisoara", "Ti" };
-    graph g(4, Names);
+   // char *Nodes[2] = new char;
+    char *nodes[4][2] = { "Oradea","Or", "Zerind", "Ze", "Arad", "Ar", "Timisoara", "Ti" };
+    graph g(4, nodes);
     g.listNodes();
     //system("pause");
     return 0;
