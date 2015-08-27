@@ -22,8 +22,8 @@ public:
     void addEdge(int n1, int n2, int pathcost, int directPathCost);
     void addEdge(int noOfEdges, edge e[]);
     void listNodes();
-    void setDirectPath(char* start, char* end, int directPathCost);
-    void findShortestpath(char* start, char* goal);
+    void setDirectPath(const char* start, const char* end, int directPathCost);
+    void findShortestpath(const char* start, const char* goal);
 };
 void graph::listNodes() {
     for(int i = 0; i < noOfNodes; i++){
@@ -48,8 +48,8 @@ graph::graph(int no, char* namesArg[][2] ) {
 }
 graph::~graph() {
     for(int i = 0; i<noOfNodes; i++) {
-        delete[] names[i];
-        delete[] shortNames[i];
+       // delete[] names[i];
+//        delete[] shortNames[i];
         delete[] path[i];
         delete[] directPath[i];
     }
@@ -65,69 +65,91 @@ void graph::addEdge(int n1, int n2, int pathcost, int directPathCost) {
     path[n1-1][n2-1] = path[n2-1][n1-1] = pathcost;
     directPath[n1-1][n2-1] = directPath[n2-1][n1-1] = directPathCost;
 }
-void graph::setDirectPath(char* start, char* end, int directPathCost) {
-    int i,j;
-    for(i=0; i<noOfNodes; i++) {
-        if( strcmpi( shortNames[i], end) == 0)
-            break;
+
+void graph::findShortestpath(const char* start, const char* goal) {
+	int startNode, goalNode;
+    for(int i=0; i < noOfNodes; i++) {
+        if( _strcmpi( shortNames[i], start) == 0) {
+			startNode = i; break;
+		}
     }
-    for(j=0; j<noOfNodes; j++) {
-        if( strcmpi( shortNames[j], end) == 0)
-            break;
+    for(int j=0; j < noOfNodes; j++) {
+        if( _strcmpi( shortNames[j], goal) == 0) {
+			goalNode = j; break;
+		}
     }
-    directPath[i][j] = directPath[j][i] = directPathCost;
-}
-void graph::findShortestpath(char* start, char* goal) {
-	int i,j;
-    for(i=0; i<noOfNodes; i++) {
-        if( strcmpi( shortNames[i], end) == 0)
-            break;
-    }
-    for(j=0; j<noOfNodes; j++) {
-        if( strcmpi( shortNames[j], end) == 0)
-            break;
-    }
-    int startNode = i, goalNode = j;
+
 	int leastCostSoFar = 0;
-	int pathToGoal[noOfNodes];
+	int* pathToGoal = new int[noOfNodes];
 	int top = -1;
 	pathToGoal[++top] = startNode;
 	int selectedNode = startNode;
 	int supposedSelectedNode;
-	int supposedleastCost = -1 , tempLeastCost; 
+	int supposedleastCost = -1 , tempLeastCost;
+	int count = 0;
+	bool triggerUpdate = false;
 	while(selectedNode != goalNode) {
-		for(i = 0; i < noOfNodes; i++) {
-			if(path[selectedNode][i] >= 0 && selectedNode!= i) { //finding neighbour nodes
+		for(int i = 0; i < noOfNodes; i++) {
+			if(path[selectedNode][i] >= 0 && selectedNode != i) { //finding neighbour nodes
 				tempLeastCost = leastCostSoFar + path[selectedNode][i] + directPath[i][goalNode];
 				if( tempLeastCost < supposedleastCost || supposedleastCost < 0 ) {
 					supposedleastCost = tempLeastCost;
-					
 					supposedSelectedNode = i;
+					//triggerUpdate = true;
 				}
 			}
 		}
-		leastCostSoFar += path[selectedNode][supposedSelectedNode];
-		selectedNode = supposedSelectedNode;
-		pathToGoal[++top] = selectedNode;
+   //     if(triggerUpdate){
+            leastCostSoFar += path[selectedNode][supposedSelectedNode];
+            selectedNode = supposedSelectedNode;
+            pathToGoal[++top] = selectedNode;
+		//}
+		//triggerUpdate = false;
+		supposedleastCost = -1;
+		count++;
 	}
-	
-	
+	cout<<"Total looping through while loop or depth of search tree  is "<<count<<endl;
+	cout<<"Shortest route is through ";
+	for(int i = 0; i<= top; i++) {
+		cout<<i<<". "<< names[pathToGoal[i]];
+		if(i < top)
+            cout<<" -->   ";
+    }
+	cout<<endl<<endl<<"Total path cost is "<<leastCostSoFar<<endl;
+
+}
+void graph::setDirectPath(const char* start, const char* end, int directPathCost) {
+    int n1, n2;
+    for(int i=0; i < noOfNodes; i++) {
+        if( _strcmpi( shortNames[i], start) == 0) {
+            n1 = i; break;
+        }
+    }
+    for(int j=0; j < noOfNodes; j++) {
+        if( _strcmpi( shortNames[j], end) == 0) {
+            n2 = j; break;
+        }
+    }
+    directPath[n1][n2] = directPath[n2][n1] = directPathCost;
+	//cout<<names[n1]<<"   "<<names[n2]<<"   "<<directPathCost<<endl;
 }
 void graph::addEdge(int n, edge e[]) {
     int n1, n2;
     for(int i = 0; i < n; i++) {
         for(int j=0; j<noOfNodes; j++) {
-            if( strcmpi( shortNames[j], e[i].start) == 0) {
+            if( _strcmpi( shortNames[j], e[i].start) == 0) {
                 n1 = j; break;
             }
         }
         for(int j=0; j<noOfNodes; j++) {
-            if( strcmpi( shortNames[j], e[i].end) == 0) {
+            if( _strcmpi( shortNames[j], e[i].end) == 0) {
                 n2 = j; break;
             }
         }
         path[n1][n2] = path[n2][n1] = e[i].pathCost;
+		//cout<<names[n1]<<"   "<<names[n2]<<"   "<<e[i].pathCost<<endl;
     }
+	//cout<<endl;
 }
 
 int main() {
@@ -138,17 +160,39 @@ int main() {
                     "Bucharest","bu", "Giurgiu","gi", "Urziceni","ur", "Hirsova","hi",
                     "Eforie","ef", "Vaslui","va", "lasi","la", "Neamt","ne"
         };
-    edge e[23] = {   "or", "ze", 230,
-                    "ar", "ti", 323
+    edge e[23] = {  "or", "ze", 71,
+                    "ze", "ar", 75,
+                    "ar", "ti", 118,
+                    "ti", "lu", 111,
+                    "lu", "me", 70,
+                    "me", "do", 75,
+                    "do", "cr", 120,
+                    "cr", "ri", 146,
+                    "ri", "si", 80,
+                    "si", "or", 151,
+                    "si", "ar", 140,
+                    "si", "fa", 99,
+                    "fa", "bu", 211,
+                    "bu", "pi", 101,
+                    "pi", "ri", 97,
+                    "pi", "cr", 138,
+					"bu", "gi", 90,
+                    "bu", "ur", 85,
+                    "ur", "hi", 98,
+                    "hi", "ef", 86,
+                    "ur", "va", 142,
+                    "va", "la", 92,
+                    "la", "ne", 87
                 };
 
     graph g(20, nodes);
    // g.listNodes();
-    g.addEdge(2, e);
+    g.addEdge(23, e);
+
 	g.setDirectPath("bu", "ar", 366);
-	g.setDirectPath("bu", "bu", 366);
+	g.setDirectPath("bu", "bu", 0);
 	g.setDirectPath("bu", "cr", 160);
-	g.setDirectPath("bu", "do", 42);
+	g.setDirectPath("bu", "do", 242);
 	g.setDirectPath("bu", "ef", 161);
 	g.setDirectPath("bu", "fa", 178);
 	g.setDirectPath("bu", "gi", 77);
@@ -162,10 +206,11 @@ int main() {
 	g.setDirectPath("bu", "ri", 193);
 	g.setDirectPath("bu", "si", 253);
 	g.setDirectPath("bu", "ti", 329);
-	g.setDirectPath("bu", "ui", 80);
+	g.setDirectPath("bu", "ur", 80);
 	g.setDirectPath("bu", "va", 199);
 	g.setDirectPath("bu", "ze", 374);
-    g.findShortestpath("ar", "bu")
-    //system("pause");
+
+    g.findShortestpath("ar", "bu");
+    system("pause");
     return 0;
 }
