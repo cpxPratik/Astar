@@ -1,17 +1,19 @@
 #include <iostream>
 #include <stdlib.h>
-#include <string.h>
+#include <iomanip>
 using namespace std;
+
 struct edge {
     char* start;
     char* end;
     int pathCost;
    // int directPath;
 };
+
 class graph {
 private:
-    int** path;
-    int** directPath;
+    int** path; // two dimensional array works like adjacency matrix of graph but -1 => not adjacent, other value => path cost of edge
+    int** directPath; //straight-line distance
     char** names;
     char** shortNames;
     int noOfNodes;
@@ -25,12 +27,14 @@ public:
     void setDirectPath(const char* start, const char* end, int directPathCost);
     void findShortestpath(const char* start, const char* goal);
 };
+
 void graph::listNodes() {
     for(int i = 0; i < noOfNodes; i++){
         cout << i << "  " << names[i] << " - " << shortNames[i] << endl;
     }
 
 }
+
 graph::graph(int no, char* namesArg[][2] ) {
     noOfNodes = no;
     path = new int*[no];
@@ -46,6 +50,7 @@ graph::graph(int no, char* namesArg[][2] ) {
             path[i][j] = directPath[i][j] = -1;
     }
 }
+
 graph::~graph() {
     for(int i = 0; i<noOfNodes; i++) {
        // delete[] names[i];
@@ -58,9 +63,11 @@ graph::~graph() {
     delete path;
     delete directPath;
 }
+
 bool graph::isConnected(int node1, int node2) {
     return (path[node1][node2] >= 0);
 }
+
 void graph::addEdge(int n1, int n2, int pathcost, int directPathCost) {
     path[n1-1][n2-1] = path[n2-1][n1-1] = pathcost;
     directPath[n1-1][n2-1] = directPath[n2-1][n1-1] = directPathCost;
@@ -80,17 +87,26 @@ void graph::findShortestpath(const char* start, const char* goal) {
     }
 
 	int leastCostSoFar = 0;
-	int* pathToGoal = new int[noOfNodes];
+	int* pathToGoal = new int[noOfNodes]; // stores routing nodes
 	int top = -1;
 	pathToGoal[++top] = startNode;
-	int selectedNode = startNode;
-	int supposedSelectedNode;
-	int supposedleastCost = -1 , tempLeastCost;
+	int selectedNode = startNode; //currently choosen node
+	int supposedSelectedNode; // stores node with least estimated cost found so far
+	int supposedleastCost = -1; //stores least estimated cost found so far
+	int tempLeastCost;
 	int count = 0;
-	bool triggerUpdate = false;
+	bool alreadyVisitedNode = false;
+
 	while(selectedNode != goalNode) {
 		for(int i = 0; i < noOfNodes; i++) {
-			if(path[selectedNode][i] >= 0 && selectedNode != i) { //finding neighbour nodes
+			alreadyVisitedNode = false;
+			for (int j = 0; j <= top; j++) {
+				if (i == pathToGoal[j]) {	//makes sure not to return in previous node and prevents infinite loop
+					alreadyVisitedNode = true;
+					break;
+				}
+			}
+			if(path[selectedNode][i] >= 0 && !alreadyVisitedNode) { //finding neighbour nodes by checking path(edge) cost
 				tempLeastCost = leastCostSoFar + path[selectedNode][i] + directPath[i][goalNode];
 				if( tempLeastCost < supposedleastCost || supposedleastCost < 0 ) {
 					supposedleastCost = tempLeastCost;
@@ -99,25 +115,25 @@ void graph::findShortestpath(const char* start, const char* goal) {
 				}
 			}
 		}
-   //     if(triggerUpdate){
-            leastCostSoFar += path[selectedNode][supposedSelectedNode];
-            selectedNode = supposedSelectedNode;
-            pathToGoal[++top] = selectedNode;
-		//}
-		//triggerUpdate = false;
+        leastCostSoFar += path[selectedNode][supposedSelectedNode]; // adds path cost
+        selectedNode = supposedSelectedNode; // chooses new node which as least estimated cost
+        pathToGoal[++top] = selectedNode;
+
+		cout << "Choosing \"" << names[pathToGoal[top]] << "\" for minimum estimated cost of " << supposedleastCost << endl;
 		supposedleastCost = -1;
 		count++;
 	}
-	cout<<"Total looping through while loop or depth of search tree  is "<<count<<endl;
-	cout<<"Shortest route is through ";
+	cout << endl << "Total looping through while loop or depth of search tree  is "
+        << count << endl;
+	cout << endl << "Shortest route to " << names[goalNode] << " is through " << endl;
 	for(int i = 0; i<= top; i++) {
-		cout<<i<<". "<< names[pathToGoal[i]];
+		cout << names[pathToGoal[i]];
 		if(i < top)
-            cout<<" -->   ";
+            cout <<" -> ";
     }
-	cout<<endl<<endl<<"Total path cost is "<<leastCostSoFar<<endl;
-
+	cout << endl << endl <<"Total path cost is "<<leastCostSoFar<< endl << endl;
 }
+
 void graph::setDirectPath(const char* start, const char* end, int directPathCost) {
     int n1, n2;
     for(int i=0; i < noOfNodes; i++) {
@@ -131,8 +147,9 @@ void graph::setDirectPath(const char* start, const char* end, int directPathCost
         }
     }
     directPath[n1][n2] = directPath[n2][n1] = directPathCost;
-	//cout<<names[n1]<<"   "<<names[n2]<<"   "<<directPathCost<<endl;
+	//cout <<names[n1]<<"   "<<names[n2]<<"   "<<directPathCost<< endl;
 }
+
 void graph::addEdge(int n, edge e[]) {
     int n1, n2;
     for(int i = 0; i < n; i++) {
@@ -147,9 +164,9 @@ void graph::addEdge(int n, edge e[]) {
             }
         }
         path[n1][n2] = path[n2][n1] = e[i].pathCost;
-		//cout<<names[n1]<<"   "<<names[n2]<<"   "<<e[i].pathCost<<endl;
+		//cout <<names[n1]<<"   "<<names[n2]<<"   "<<e[i].pathCost<< endl;
     }
-	//cout<<endl;
+	//cout << endl;
 }
 
 int main() {
@@ -210,7 +227,33 @@ int main() {
 	g.setDirectPath("bu", "va", 199);
 	g.setDirectPath("bu", "ze", 374);
 
-    g.findShortestpath("ar", "bu");
+
+	//cout << "
+	char initialNode[20];
+	bool onNodeList = false;
+
+	cout << "Following are places in Romania and corresponding key :" << endl;
+	for (int i = 0; i < 20; i++) {
+		cout << setw(14) << nodes[i][0] << " - " << nodes[i][1] << "\t    ";
+		if (i % 3 == 0)
+			cout << endl;
+	}
+	do {
+		cout << "\nEnter the starting place's key to find shortest route. Bucharest will be destination by default:\n";
+		cin >> initialNode;
+		for (int i = 0; i < 20; i++) {
+			if (_strcmpi(nodes[i][1], initialNode) == 0) {
+				onNodeList = true; break;
+			}
+		}
+		if (!onNodeList) {
+			cout << "'" << initialNode << "' is not in the above list.\n";
+		}
+	} while (!onNodeList);
+	
+	cout << endl;
+
+    g.findShortestpath(initialNode, "bu");
     system("pause");
     return 0;
 }
