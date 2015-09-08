@@ -132,6 +132,7 @@ void graph::findShortestpath(const char* start, const char* goal) {
             cout <<" -> ";
     }
 	cout << endl << endl <<"Total path cost is "<<leastCostSoFar<< endl << endl;
+	delete[] pathToGoal;
 }
 
 void graph::setDirectPath(const char* start, const char* end, int directPathCost) {
